@@ -17,7 +17,6 @@ function start(response, postData) {
           <p>表示1 (テキストボックスの内容) : <span id="out4"></span></p>
           <p>表示2 (テキストボックス２の内容) : <span id="out5"></span></p>
           <p>表示3 : <span id="out6"></span></p>
-
           <p>ボタンを押すと通信が始まります</p>
           <form id="form1">
             <input type="button" id="btn1" value="ボタン1"><br />
@@ -40,7 +39,6 @@ function start(response, postData) {
             $( function(){
               $("#btn1").click(function(){
                 $("#out6").html("データ取得中です");
-
                 $.ajax({
                   url:"http://localhost:8888/upload",
                   type:"POST",
@@ -51,11 +49,11 @@ function start(response, postData) {
                   // 'data' must be a query string like "cs1=aaa&cs2=bbb"
                   console.log(typeof data);
                   console.log(data);
-                  var obj = my_querystring(data);
+                //   var obj = my_querystring(data);
                   $("#out1").html(jqXHR.status);
                   $("#out2").html(textStatus);
-                  $("#out4").html(obj["textbox1"]);
-                  $("#out5").html(obj["textbox2"]);
+                  $("#out4").html(data["textbox1"]);
+                  $("#out5").html(data["textbox2"]);
                 }).fail(function(jqXHR, textStatus, errorThrown){
                   $("#out1").html(jqXHR.status);
                   $("#out2").html(textStatus);
@@ -75,11 +73,13 @@ function start(response, postData) {
   response.end();
 }
 
-function upload(response, postData) {
+function upload(response, postData){
+  console.log(postData);
   response.writeHead(200, {"Content-Type": "text/plain"});
   response.write(postData);
   response.end();
 }
+
 
 exports.start = start;
 exports.upload = upload;

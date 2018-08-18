@@ -54,15 +54,10 @@ function start(response, postData){
             console.log(Array.isArray(data));
             console.log(data[0]);
 
-            let obj = {};
-            data.forEach((elem)=>{
-              obj[elem["name"]] = elem["value"];
-            });
-
             $("#out1").html(jqXHR.status);
             $("#out2").html(textStatus);
-            $("#out4").html(obj["textbox1"]);
-            $("#out5").html(obj["textbox2"]);
+            $("#out4").html(data["textbox1"]);
+            $("#out5").html(data["textbox2"]);
 
           }).fail((jqXHR, textStatus, errorThrown)=>{
 
@@ -86,8 +81,16 @@ function start(response, postData){
 }
 
 function upload(response, postData){
+  json_array = JSON.parse(postData);
+  let obj = {};
+  json_array.forEach((elem)=>{
+    obj[elem["name"]] = elem["value"];
+  });
+  str_obj = JSON.stringify(obj);
+  console.log(str_obj);
+
   response.writeHead(200, {"Content-Type": "text/plain"});
-  response.write(postData);
+  response.write(str_obj);
   response.end();
 }
 
