@@ -1,3 +1,4 @@
+let qs = require('query-string');
 function start(response, postData) {
 
   const body = `
@@ -26,6 +27,7 @@ function start(response, postData) {
             <input type="text" name="textbox2" value="custom2">
           </form>
           <script type="text/javascript">
+          /*
             function my_querystring(query){
               new_object = {};
               query.split('&').forEach(function(single_query){
@@ -36,6 +38,7 @@ function start(response, postData) {
               });
               return new_object;
             }
+          */
             $( function(){
               $("#btn1").click(function(){
                 $("#out6").html("データ取得中です");
@@ -43,13 +46,11 @@ function start(response, postData) {
                   url:"http://localhost:8888/upload",
                   type:"POST",
                   data:$("#form1").serialize(),
-                  //dataType:"json",
                   timeout: 1000,
                 }).done(function(data, textStatus, jqXHR){
-                  // 'data' must be a query string like "cs1=aaa&cs2=bbb"
                   console.log(typeof data);
                   console.log(data);
-                //   var obj = my_querystring(data);
+//                  var obj = my_querystring(data);
                   $("#out1").html(jqXHR.status);
                   $("#out2").html(textStatus);
                   $("#out4").html(data["textbox1"]);
@@ -74,9 +75,12 @@ function start(response, postData) {
 }
 
 function upload(response, postData){
-  console.log(postData);
+  let result = JSON.stringify(qs.parse(postData));
+  console.log(typeof result);
+  console.log(JSON.stringify(qs.parse(postData)));
+
   response.writeHead(200, {"Content-Type": "text/plain"});
-  response.write(postData);
+  response.write(result);
   response.end();
 }
 
