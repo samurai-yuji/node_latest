@@ -1,5 +1,6 @@
-let http = require("http");
+let https = require("https");
 let url = require("url");
+let fs = require("fs");
 
 function start(route, handle) {
   function onRequest(request, response) {
@@ -21,7 +22,12 @@ function start(route, handle) {
 
   }
 
-  http.createServer(onRequest).listen(8888,'0.0.0.0');
+  const options = {
+    key: fs.readFileSync('server.key'),
+    cert: fs.readFileSync('server.crt')
+  };
+
+  https.createServer(options,onRequest).listen(8888,'0.0.0.0');
   console.log("Server has started.");
 }
 

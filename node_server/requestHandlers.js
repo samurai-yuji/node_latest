@@ -43,13 +43,14 @@ function start(response, postData) {
               $("#btn1").click(function(){
                 $("#out6").html("データ取得中です");
                 $.ajax({
-                  url:"http://localhost:8888/upload",
+                  url:"/upload",
                   type:"POST",
                   data:$("#form1").serialize(),
                   timeout: 1000,
                 }).done(function(data, textStatus, jqXHR){
                   console.log(typeof data);
                   console.log(data);
+                  data = JSON.parse(data);
 //                  var obj = my_querystring(data);
                   $("#out1").html(jqXHR.status);
                   $("#out2").html(textStatus);
@@ -76,6 +77,10 @@ function start(response, postData) {
 
 function upload(response, postData){
   let result = JSON.stringify(qs.parse(postData));
+
+  console.log(typeof qs.parse(postData));
+  console.log(qs.parse(postData));
+
   console.log(typeof result);
   console.log(JSON.stringify(qs.parse(postData)));
 
