@@ -1,27 +1,26 @@
 let http = require("http");
 let https = require("https");
 
+let Router = require("router");
+let finalHandler = require("finalHandler");
+let bodyParser = require("body-parser");
+
 let url = require("url");
 let fs = require("fs");
 
-function start(route, handle) {
+let requestHandlers = require("./requestHandlers");
+
+function server_start(route, handle) {
+
+  var router = Router();
+
+  router.use(bodyParser());
+
+  router.get("/",requestHandlers.start);
+  router.post("/upload",requestHandlers.upload);
+
   function onRequest(request, response) {
-    let postData = "";
-    let pathname = url.parse(request.url).pathname;
-    console.log("Request for " + pathname + " received.");
-
-    request.setEncoding("utf8");
-
-    request.addListener("data", function(postDataChunk) {
-      postData += postDataChunk;
-      console.log("Received POST data chunk '"+
-      postDataChunk + "'.");
-    });
-
-    request.addListener("end", function() {
-      route(handle, pathname, response, postData);
-    });
-
+    router(request, response, finalHandler(request, response));
   }
 
   http.createServer((req, res) => {
@@ -39,4 +38,4 @@ function start(route, handle) {
 
 }
 
-exports.start = start;
+server_start();

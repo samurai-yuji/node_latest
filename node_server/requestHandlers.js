@@ -1,5 +1,5 @@
 let qs = require('query-string');
-function start(response, postData) {
+function start(request, response) {
 
   const body = `
     <!DOCTYPE html>
@@ -41,6 +41,7 @@ function start(response, postData) {
           */
             $( function(){
               $("#btn1").click(function(){
+                console.log($("#form1").serialize());
                 $("#out6").html("データ取得中です");
                 $.ajax({
                   url:"/upload",
@@ -51,7 +52,6 @@ function start(response, postData) {
                   console.log(typeof data);
                   console.log(data);
                   data = JSON.parse(data);
-//                  var obj = my_querystring(data);
                   $("#out1").html(jqXHR.status);
                   $("#out2").html(textStatus);
                   $("#out4").html(data["textbox1"]);
@@ -75,14 +75,14 @@ function start(response, postData) {
   response.end();
 }
 
-function upload(response, postData){
-  let result = JSON.stringify(qs.parse(postData));
+function upload(request, response){
+  let postData = request.body;
+  console.log(typeof postData);
+  console.log(postData);
 
-  console.log(typeof qs.parse(postData));
-  console.log(qs.parse(postData));
-
+  let result = JSON.stringify(postData);
   console.log(typeof result);
-  console.log(JSON.stringify(qs.parse(postData)));
+  console.log(result);
 
   response.writeHead(200, {"Content-Type": "text/plain"});
   response.write(result);
