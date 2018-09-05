@@ -23,8 +23,8 @@ function server_start(route, handle) {
   }).listen(8080,'0.0.0.0');
 
   const options = {
-    key: fs.readFileSync('server.key'),
-    cert: fs.readFileSync('server.crt')
+    key: fs.readFileSync('secure/server.key'),
+    cert: fs.readFileSync('secure/server.crt')
   };
 
   https.createServer(options,(req, res) => {
