@@ -1,13 +1,11 @@
 let http = require("http");
 let https = require("https");
-let stat = require("node-static");
 
 let Router = require("router");
 let finalHandler = require("finalHandler");
 let bodyParser = require("body-parser");
 
 let fs = require("fs");
-let file = new stat.Server("./public");
 
 let requestHandlers = require("./requestHandlers");
 
@@ -35,9 +33,6 @@ function server_start(route, handle) {
 
   https.createServer(options,(req, res) => {
     router(req, res, finalHandler(req, res));
-    req.addListener('end', () => {
-      file.serve(req,res);
-	}).resume();
   }).listen(8443,'0.0.0.0');
   console.log("Server has started.");
 }
