@@ -3,7 +3,8 @@ let fs = require('fs');
 
 function start(request, response) {
 
-  const body = fs.readFileSync('templates/start.html');
+  const body = fs.readFileSync('public/templates/start.html');
+  //const body = "aaa"
 
   response.writeHead(200, {"Content-Type": "text/html"});
   response.write(body);
@@ -43,7 +44,15 @@ function count(request, response){
     }
   }
 
-  let result = JSON.stringify(words);
+  var arr = Object.keys(words).map( (key) => {
+    return [key,words[key]];
+  });
+
+  arr.sort( (a,b) => {
+    return a[1]<b[1]?1:-1;
+  });
+
+  let result = JSON.stringify(arr);
   console.log(result);
 
   response.writeHead(200, {"Content-Type": "text/plain"});
@@ -51,6 +60,16 @@ function count(request, response){
   response.end();
 }
 
+function pub(req,res){
+  var dir = req.params.dir;
+  var file = req.params.file;
+
+  res.write(fs.readFileSync('public/'+dir+'/'+file));
+  res.end();
+}
+
 exports.start = start;
 exports.upload = upload;
 exports.count = count;
+exports.pub = pub;
+
