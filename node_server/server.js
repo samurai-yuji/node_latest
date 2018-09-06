@@ -16,6 +16,7 @@ function server_start(route, handle) {
 
   router.get("/",requestHandlers.start);
   router.post("/upload",requestHandlers.upload);
+  router.post("/count",requestHandlers.count);
 
   http.createServer((req, res) => {
     res.writeHead(301,{Location: "https://localhost:8443"});
