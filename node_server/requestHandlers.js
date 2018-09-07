@@ -1,5 +1,6 @@
 let qs = require('query-string');
 let fs = require('fs');
+let mysql = require('mysql');
 
 function start(request, response) {
 
@@ -54,6 +55,39 @@ function count(request, response){
 
   let result = JSON.stringify(arr);
   console.log(result);
+
+  var conn = mysql.createConnection({
+    host : 'localhost',
+    database : 'users',
+    user : 'admin',
+    password : 'passxxxxxxxx'
+  });
+
+  // Need user id (tentatively fix to 'user1')
+  conn.query(
+    "CREATE TABLE IF NOT EXISTS user_words (user varchar(64), words blob)",
+    {},
+    (error,results,fiidds) => {}
+  );
+
+  conn.query("SELECT * FROM user_words WHERE user = 'user1'",
+    {},
+    (error, results, fields) => {
+      if(results.length == 0) {
+        conn.query(
+          "INSERT INTO user_words set ?",
+          { user:'user1', words:postData.words },
+          (error,results,fiidds) => {}
+        );
+      }else{
+        conn.query(
+          "UPDATE user_words SET words = ? WHERE user = ?",
+          [ results[0]["words"].toString()+ " " +postData.words, 'user1' ],
+          (error,results,fiidds) => {}
+        );
+      }
+    }
+  )
 
   response.writeHead(200, {"Content-Type": "text/plain"});
   response.write(result);
