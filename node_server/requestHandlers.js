@@ -2,10 +2,11 @@ let qs = require('query-string');
 let fs = require('fs');
 let mysql = require('mysql');
 
+let SECRET_KEY = "RANDOM_VALUE";
+
 function start(request, response) {
 
   const body = fs.readFileSync('public/templates/start.html');
-  //const body = "aaa"
 
   response.writeHead(200, {"Content-Type": "text/html"});
   response.write(body);
@@ -30,31 +31,13 @@ function count(request, response){
   let postData = request.body;
   console.log(postData);
 
-  var words = {};
-  if(postData != null){
-    if(postData.words != null){
-      postData.words.split(' ').forEach( (val) => {
-        if(val != ''){
-          if(words[val] != null){
-            words[val] += 1;
-          }else{
-            words[val] = 1;
-          }
-        }
-      });
-    }
-  }
+  let cookie = request.headers.cookie;
+  cookie = cookie.substring(0,cookie.indexOf(SECRET_KEY));
 
-  var arr = Object.keys(words).map( (key) => {
-    return [key,words[key]];
-  });
+  let session_id = cookie.split('=')[1];
 
-  arr.sort( (a,b) => {
-    return a[1]<b[1]?1:-1;
-  });
-
-  let result = JSON.stringify(arr);
-  console.log(result);
+  console.log(cookie);
+  console.log(session_id);
 
   var conn = mysql.createConnection({
     host : 'localhost',
@@ -63,35 +46,65 @@ function count(request, response){
     password : 'passxxxxxxxx'
   });
 
-  // Need user id (tentatively fix to 'user1')
   conn.query(
     "CREATE TABLE IF NOT EXISTS user_words (user varchar(64), words blob)",
     {},
-    (error,results,fiidds) => {}
+    (error,results,fields) => {}
   );
 
-  conn.query("SELECT * FROM user_words WHERE user = 'user1'",
-    {},
-    (error, results, fields) => {
-      if(results.length == 0) {
-        conn.query(
-          "INSERT INTO user_words set ?",
-          { user:'user1', words:postData.words },
-          (error,results,fiidds) => {}
-        );
-      }else{
-        conn.query(
-          "UPDATE user_words SET words = ? WHERE user = ?",
-          [ results[0]["words"].toString()+ " " +postData.words, 'user1' ],
-          (error,results,fiidds) => {}
-        );
-      }
-    }
-  )
+  var all_words = "";
+  if(postData != null){
+    if(postData.words != null){
+      conn.query("SELECT * FROM user_words WHERE user = 'yuji'",
+        {},
+        (error, results, fields) => {
 
-  response.writeHead(200, {"Content-Type": "text/plain"});
-  response.write(result);
-  response.end();
+          if(results.length == 0) {
+            all_words = postData.words;
+            conn.query(
+              "INSERT INTO user_words set ?",
+              { user: session_id, words:all_words },
+              (error,results,fields) => {}
+            );
+          }else{
+            all_words = results[0]["words"].toString()+ " " +postData.words;
+            conn.query(
+              "UPDATE user_words SET words = ? WHERE user = 'yuji'",
+              [ all_words ],
+              (error,results,fields) => {}
+            );
+          }
+
+          var word_counts = {};
+          all_words.split(' ').forEach( (val) => {
+            if(val != ''){
+              if(word_counts[val] != null){
+                word_counts[val] += 1;
+              }else{
+                word_counts[val] = 1;
+              }
+            }
+          });
+
+          var arr = Object.keys(word_counts).map( (key) => {
+            return [key,word_counts[key]];
+          });
+
+          arr.sort( (a,b) => {
+            return a[1]<b[1]?1:-1;
+          });
+
+          let result = JSON.stringify(arr);
+          console.log(result);
+
+          response.writeHead(200, {"Content-Type": "text/plain"});
+          response.write(result);
+          response.end();
+
+        }
+      )
+    }
+  }
 }
 
 function pub(req,res){
@@ -102,8 +115,42 @@ function pub(req,res){
   res.end();
 }
 
+/* Temporary data */
+/* This should be in database. */
+let accounts = {
+  "yuji" : "passwordxxxx",
+  "taro" : "passwordzzzz"
+};
+
+
+function login(request, response) {
+  let postData = request.body;
+  let result = false;
+
+  if(postData != null){
+    if(postData.account != null && postData.password != null){
+      if(Object.keys(accounts).indexOf(postData.account) >= 0){
+        if(accounts[postData.account] == postData.password){
+          result = true;
+        }
+      }
+    }
+  }
+
+  console.log(result);
+  if(result){
+    response.setHeader("Set-Cookie",["session_id="+postData.account+SECRET_KEY]);
+    start(request,response);
+  }else{
+    response.writeHead(401, {"Content-Type": "text/html"});
+    response.write("");
+    response.end();
+  }
+}
+
 exports.start = start;
 exports.upload = upload;
 exports.count = count;
 exports.pub = pub;
+exports.login = login;
 

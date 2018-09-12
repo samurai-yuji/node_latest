@@ -17,6 +17,7 @@ function server_start(route, handle) {
   router.get("/",requestHandlers.start);
   router.post("/upload",requestHandlers.upload);
   router.post("/count",requestHandlers.count);
+  router.post("/login",requestHandlers.login);
 
   // For static/template files
   router.get("/public/:dir/:file",requestHandlers.pub);

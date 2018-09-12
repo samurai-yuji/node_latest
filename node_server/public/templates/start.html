@@ -22,6 +22,14 @@
 
     <body>
 
+      <form id="login">
+        <input type="button" id="btn3" value="login"><br />
+        アカウント名<br />
+        <input type="text" name="account"><br />
+        パスワード2<br />
+        <input type="password" name="password">
+      </form>
+
       <p>jqXHR.statusを表示:<span id="out1"></span></p>
       <p>textStatusを表示:<span id="out2"></span></p>
       <p>errorThrownを表示:<span id="out3"></span></p>
@@ -117,12 +125,29 @@
                 }
               }
 
-              $.jqplot('graph', [data], option);
+              $.jqplot('graph', [data], option).replot();
 
             }).fail(function(jqXHR, textStatus, errorThrown){
               /* Error hundling */
             }).always(function(){
               $("#out6").html("Completed count.");
+            });
+          });
+
+          $("#btn3").click(function(){
+            console.log($("#login").serialize());
+            $("#out6").html("データ取得中です");
+            $.ajax({
+              url:"/login",
+              type:"POST",
+              data:$("#login").serialize(),
+              timeout: 1000,
+            }).done(function(data, textStatus, jqXHR){
+              $("#out1").html("Logged in!");
+           }).fail(function(jqXHR, textStatus, errorThrown){
+              $("#out1").html("Failed login...");
+           }).always(function(){
+              $("#out6").html("Login completed.");
             });
           });
 
