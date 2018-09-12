@@ -55,8 +55,8 @@ function count(request, response){
   var all_words = "";
   if(postData != null){
     if(postData.words != null){
-      conn.query("SELECT * FROM user_words WHERE user = 'yuji'",
-        {},
+      conn.query("SELECT * FROM user_words WHERE user = ?",
+        [ session_id ],
         (error, results, fields) => {
 
           if(results.length == 0) {
@@ -69,8 +69,8 @@ function count(request, response){
           }else{
             all_words = results[0]["words"].toString()+ " " +postData.words;
             conn.query(
-              "UPDATE user_words SET words = ? WHERE user = 'yuji'",
-              [ all_words ],
+              "UPDATE user_words SET words = ? WHERE user = ?",
+              [ all_words, session_id ],
               (error,results,fields) => {}
             );
           }
