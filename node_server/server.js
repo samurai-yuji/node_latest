@@ -12,7 +12,8 @@ let requestHandlers = require("./requestHandlers");
 function server_start(route, handle) {
 
   var router = Router();
-  router.use(bodyParser());
+  router.use(bodyParser.urlencoded({extended:true}));
+
 
   router.get("/",requestHandlers.start);
   router.post("/upload",requestHandlers.upload);
