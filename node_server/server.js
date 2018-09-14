@@ -1,7 +1,7 @@
 let http = require("http");
 let https = require("https");
 
-let Router = require("router");
+let express = require("express");
 let finalHandler = require("finalHandler");
 let bodyParser = require("body-parser");
 
@@ -10,32 +10,44 @@ let fs = require("fs");
 let requestHandlers = require("./requestHandlers");
 
 function server_start(route, handle) {
+  var app = express();
+  app.use(bodyParser.urlencoded({ extended: false }));
 
-  var router = Router();
-  router.use(bodyParser.urlencoded({extended:true}));
+  var router = express.Router();
 
+  configure_routings(app,router);
+  start_http();
+  start_https(app);
+}
 
-  router.get("/",requestHandlers.start);
-  router.post("/upload",requestHandlers.upload);
-  router.post("/count",requestHandlers.count);
-  router.post("/login",requestHandlers.login);
+function configure_routings(app,router){
+
+  app.get("/",requestHandlers.start);
+  app.post("/upload",requestHandlers.upload);
+  app.post("/count",requestHandlers.count);
+  app.post("/login",requestHandlers.login);
 
   // For static/template files
-  router.get("/public/:dir/:file",requestHandlers.pub);
+  router.get("/:dir/:file",requestHandlers.pub);
+  app.use("/public", router);
 
+}
+
+function start_http() {
   http.createServer((req, res) => {
     res.writeHead(301,{Location: "https://localhost:8443"});
     res.end();
   }).listen(8080,'0.0.0.0');
+}
 
+function start_https(app){
   const options = {
     key: fs.readFileSync('public/secure/server.key'),
     cert: fs.readFileSync('public/secure/server.crt')
   };
 
-  https.createServer(options,(req, res) => {
-    router(req, res, finalHandler(req, res));
-  }).listen(8443,'0.0.0.0');
+  https.createServer(options,app).listen(8443,'0.0.0.0');
+
   console.log("Server has started.");
 }
 
