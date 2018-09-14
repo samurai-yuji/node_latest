@@ -2,7 +2,6 @@ let http = require("http");
 let https = require("https");
 
 let express = require("express");
-let finalHandler = require("finalHandler");
 let bodyParser = require("body-parser");
 
 let fs = require("fs");
@@ -11,6 +10,7 @@ let requestHandlers = require("./requestHandlers");
 
 function server_start(route, handle) {
   var app = express();
+  app.use(express.static('public'));
   app.use(bodyParser.urlencoded({ extended: false }));
 
   var router = express.Router();
@@ -21,16 +21,10 @@ function server_start(route, handle) {
 }
 
 function configure_routings(app,router){
-
   app.get("/",requestHandlers.start);
   app.post("/upload",requestHandlers.upload);
   app.post("/count",requestHandlers.count);
   app.post("/login",requestHandlers.login);
-
-  // For static/template files
-  router.get("/:dir/:file",requestHandlers.pub);
-  app.use("/public", router);
-
 }
 
 function start_http() {
