@@ -1,6 +1,7 @@
 let qs = require('query-string');
 let fs = require('fs');
 let mysql = require('mysql');
+let moment = require('moment');
 
 let SECRET_KEY = "RANDOM_VALUE";
 
@@ -31,13 +32,24 @@ function count(request, response){
   let postData = request.body;
   console.log(postData);
 
-  let cookie = request.headers.cookie;
-  cookie = cookie.substring(0,cookie.indexOf(SECRET_KEY));
+  let cookie = "";
+  let session_id = "";
 
-  let session_id = cookie.split('=')[1];
+  if(request.headers.cookie != null){
+    cookie = request.headers.cookie;
+    cookie = cookie.substring(0,cookie.indexOf(SECRET_KEY));
+    session_id = cookie.split('=')[1];
+  }
 
   console.log(cookie);
   console.log(session_id);
+
+  if(session_id == ""){
+    response.writeHead(401, {"Content-Type": "text/html"});
+    response.write("");
+    response.end();
+    return;
+  }
 
   var conn = mysql.createConnection({
     host : 'localhost',
@@ -127,6 +139,7 @@ function login(request, response) {
   let postData = request.body;
   let result = false;
 
+  console.log(postData);
   if(postData != null){
     if(postData.account != null && postData.password != null){
       if(Object.keys(accounts).indexOf(postData.account) >= 0){
@@ -138,8 +151,11 @@ function login(request, response) {
   }
 
   console.log(result);
+
+  let expire = moment().add(1,'minutes').format('LLLL Z'); // GMT(UTC)
+
   if(result){
-    response.setHeader("Set-Cookie",["session_id="+postData.account+SECRET_KEY]);
+    response.setHeader("Set-Cookie",["session_id="+postData.account+SECRET_KEY+"; expires="+expire]);
     start(request,response);
   }else{
     response.writeHead(401, {"Content-Type": "text/html"});
