@@ -3,8 +3,6 @@ let fs = require('fs');
 let mysql = require('mysql');
 let moment = require('moment');
 
-let SECRET_KEY = "RANDOM_VALUE";
-
 function start(request, response) {
 
   const body = fs.readFileSync('public/templates/start.html');
@@ -32,16 +30,12 @@ function count(request, response){
   let postData = request.body;
   console.log(postData);
 
-  let cookie = "";
   let session_id = "";
 
-  if(request.headers.cookie != null){
-    cookie = request.headers.cookie;
-    cookie = cookie.substring(0,cookie.indexOf(SECRET_KEY));
-    session_id = cookie.split('=')[1];
+  if(request.session.user != null){
+    session_id = request.session.user["account"];
   }
 
-  console.log(cookie);
   console.log(session_id);
 
   if(session_id == ""){
@@ -119,14 +113,6 @@ function count(request, response){
   }
 }
 
-function pub(req,res){
-  var dir = req.params.dir;
-  var file = req.params.file;
-
-  res.write(fs.readFileSync('public/'+dir+'/'+file));
-  res.end();
-}
-
 /* Temporary data */
 /* This should be in database. */
 let accounts = {
@@ -155,7 +141,7 @@ function login(request, response) {
   let expire = moment().add(1,'minutes').format('LLLL Z'); // GMT(UTC)
 
   if(result){
-    response.setHeader("Set-Cookie",["session_id="+postData.account+SECRET_KEY+"; expires="+expire]);
+    request.session.user = { account: postData.account };
     start(request,response);
   }else{
     response.writeHead(401, {"Content-Type": "text/html"});
@@ -167,6 +153,5 @@ function login(request, response) {
 exports.start = start;
 exports.upload = upload;
 exports.count = count;
-exports.pub = pub;
 exports.login = login;
 

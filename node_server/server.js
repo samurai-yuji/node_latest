@@ -3,15 +3,24 @@ let https = require("https");
 
 let express = require("express");
 let bodyParser = require("body-parser");
+let session = require("express-session");
 
 let fs = require("fs");
 
 let requestHandlers = require("./requestHandlers");
 
+let session_option = {
+  secret: 'xxxyyyzzz',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: true }
+};
+
 function server_start(route, handle) {
   var app = express();
   app.use(express.static('public'));
   app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(session(session_option));
 
   var router = express.Router();
 
