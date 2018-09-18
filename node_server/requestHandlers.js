@@ -2,6 +2,7 @@ let qs = require('query-string');
 let fs = require('fs');
 let mysql = require('mysql');
 let moment = require('moment');
+let sequelize = require('sequelize');
 
 function start(request, response) {
 
@@ -45,72 +46,79 @@ function count(request, response){
     return;
   }
 
-  var conn = mysql.createConnection({
-    host : 'localhost',
-    database : 'users',
-    user : 'admin',
-    password : 'passxxxxxxxx'
+  let db = new sequelize('apps','admin','passxxxxxxxx',{
+      host: 'localhost',
+      dialect: 'mysql',
+      pool: {},
+      operatorsAliases: false
   });
 
-  conn.query(
-    "CREATE TABLE IF NOT EXISTS user_words (user varchar(64), words blob)",
-    {},
-    (error,results,fields) => {}
-  );
+  let def_user = {
+    name: { type: sequelize.STRING },
+    age : { type: sequelize.INTEGER, defaultValue : 20},
+    id:   { type: sequelize.INTEGER, autoIncrement: true, primaryKey: true }
+  };
 
-  var all_words = "";
-  if(postData != null){
-    if(postData.words != null){
-      conn.query("SELECT * FROM user_words WHERE user = ?",
-        [ session_id ],
-        (error, results, fields) => {
+  let def_word = {
+    data: { type: sequelize.STRING },
+    lang: { type: sequelize.STRING },
+    userId: { type: sequelize.INTEGER }
+  };
 
-          if(results.length == 0) {
-            all_words = postData.words;
-            conn.query(
-              "INSERT INTO user_words set ?",
-              { user: session_id, words:all_words },
-              (error,results,fields) => {}
-            );
-          }else{
-            all_words = results[0]["words"].toString()+ " " +postData.words;
-            conn.query(
-              "UPDATE user_words SET words = ? WHERE user = ?",
-              [ all_words, session_id ],
-              (error,results,fields) => {}
-            );
-          }
+  let User = db.define('user', def_user, { /* options */ });
+  let Word = db.define('word', def_word, { /* options */ });
 
-          var word_counts = {};
-          all_words.split(' ').forEach( (val) => {
-            if(val != ''){
-              if(word_counts[val] != null){
-                word_counts[val] += 1;
-              }else{
-                word_counts[val] = 1;
-              }
+  User.hasMany(Word, { foreignKey: 'userId' });
+
+  User.sync({force:false}).then(() => {
+    return Word.sync({force:false}).then(() => { return null; });
+  }).then(() => {
+    return User.findOne({where: {name: session_id}}).then((user) => {
+      return user;
+    }).then((user) => {
+      if(user == null){
+        user = User.create({name: session_id}).then((created_user) => { return created_user; });
+      }
+      return user;
+    });
+  }).then( (user) => {
+    console.log(postData.words);
+    Word.create({data: postData.words, lang : "english", userId : user.get('id')}).then( () => {
+      user.getWords().then( (words) => {
+        var agg_words = "";
+        words.forEach( (word) => {
+          agg_words += word.get('data') + " ";
+        });
+        return agg_words
+      }).then( (words) => {
+        var word_counts = {};
+        words.split(' ').forEach( (val) => {
+          if(val != ''){
+            if(word_counts[val] != null){
+              word_counts[val] += 1;
+            }else{
+              word_counts[val] = 1;
             }
-          });
+          }
+        });
 
-          var arr = Object.keys(word_counts).map( (key) => {
-            return [key,word_counts[key]];
-          });
+        var arr = Object.keys(word_counts).map( (key) => {
+          return [key,word_counts[key]];
+        });
 
-          arr.sort( (a,b) => {
-            return a[1]<b[1]?1:-1;
-          });
+        arr.sort( (a,b) => {
+          return a[1]<b[1]?1:-1;
+        });
 
-          let result = JSON.stringify(arr);
-          console.log(result);
+        let result = JSON.stringify(arr);
+        console.log(result);
 
-          response.writeHead(200, {"Content-Type": "text/plain"});
-          response.write(result);
-          response.end();
-
-        }
-      )
-    }
-  }
+        response.writeHead(200, {"Content-Type": "text/plain"});
+        response.write(result);
+        response.end();
+      });
+    });
+  });
 }
 
 /* Temporary data */
