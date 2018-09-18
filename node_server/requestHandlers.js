@@ -55,8 +55,8 @@ function count(request, response){
 
   let def_user = {
     name: { type: sequelize.STRING },
-    age : { type: sequelize.INTEGER, defaultValue : 20},
-    id:   { type: sequelize.INTEGER, autoIncrement: true, primaryKey: true }
+    age : { type: sequelize.INTEGER, defaultValue : 20}
+    //id:   { type: sequelize.INTEGER, autoIncrement: true, primaryKey: true }
   };
 
   let def_word = {
