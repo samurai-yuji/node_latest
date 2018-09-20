@@ -3,6 +3,7 @@ let fs = require('fs');
 let mysql = require('mysql');
 let moment = require('moment');
 let sequelize = require('sequelize');
+let axios = require('axios');
 
 function start(request, response) {
 
@@ -56,7 +57,6 @@ function count(request, response){
   let def_user = {
     name: { type: sequelize.STRING },
     age : { type: sequelize.INTEGER, defaultValue : 20}
-    //id:   { type: sequelize.INTEGER, autoIncrement: true, primaryKey: true }
   };
 
   let def_word = {
@@ -158,8 +158,56 @@ function login(request, response) {
   }
 }
 
+function oauth(request, response) {
+
+  const body = fs.readFileSync('public/templates/oauth.html');
+
+  response.writeHead(200, {"Content-Type": "text/html"});
+  response.write(body);
+  response.end();
+}
+
+function redirect(request, response) {
+  var github = JSON.parse(fs.readFileSync('private/github.json'));
+
+  let clientID = github["client_id"];
+  let clientSecret = github["client_secret"]
+  let requestToken = request.query.code;
+
+  axios({
+    method: 'post',
+    url: `https://github.com/login/oauth/access_token?client_id=${clientID}&client_secret=${clientSecret}&code=${requestToken}`,
+    headers: {
+      accept: 'application/json'
+    }
+  }).then( (resp) => {
+    const accessToken = resp.data.access_token;
+    console.log(accessToken);
+    if(accessToken){
+      axios({
+        method: 'get',
+        url: `https://api.github.com/user`,
+        headers: {
+          Authorization: 'token ' + accessToken
+        }
+      }).then( (resp) => {
+        var account = resp.data.name;
+        request.session.user = { account: account };
+        response.writeHead(301,{Location: "https://localhost:8443"});
+        response.end();
+      })
+    }else{
+      response.writeHead(401, {"Content-Type": "text/html"});
+      response.write("");
+      response.end();
+    }
+  });
+}
+
 exports.start = start;
 exports.upload = upload;
 exports.count = count;
 exports.login = login;
+exports.oauth = oauth;
+exports.redirect = redirect;
 
