@@ -150,12 +150,13 @@ function login(request, response) {
 
   if(result){
     request.session.user = { account: postData.account };
-    start(request,response);
+    response.writeHead(301,{Location: "https://localhost:8443/app"});
+
   }else{
     response.writeHead(401, {"Content-Type": "text/html"});
     response.write("");
-    response.end();
   }
+  response.end();
 }
 
 function oauth(request, response) {
@@ -193,7 +194,7 @@ function redirect(request, response) {
       }).then( (resp) => {
         var account = resp.data.name;
         request.session.user = { account: account };
-        response.writeHead(301,{Location: "https://localhost:8443"});
+        response.writeHead(301,{Location: "https://localhost:8443/app"});
         response.end();
       })
     }else{
@@ -204,10 +205,16 @@ function redirect(request, response) {
   });
 }
 
+function app(request,response){
+    response.write( fs.readFileSync('public/templates/app.html') );
+    response.end();
+}
+
 exports.start = start;
 exports.upload = upload;
 exports.count = count;
 exports.login = login;
 exports.oauth = oauth;
 exports.redirect = redirect;
+exports.app = app;
 

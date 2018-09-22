@@ -36,6 +36,7 @@ function configure_routings(app,router){
   app.post("/login",requestHandlers.login);
   app.get("/oauth",requestHandlers.oauth);
   app.get("/redirect",requestHandlers.redirect);
+  app.get("/app",requestHandlers.app);
 }
 
 function start_http() {
